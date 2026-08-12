@@ -222,6 +222,7 @@
   // ─────────────────────────────────────────────
 
   const DEFAULT_URL = "https://olivekz.app.n8n.cloud/webhook/start-zayavochny-list";
+  const WEBHOOK_SECRET = "olive-zl-2026-Xk9mP3qRvBsNwY7t";
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQrt1WjFXFQUyq-ihm9S-lC6dep0f_Vyp2rBepnpgvigx_MUdIUFGuEB2YhJoBKFmcbQ/exec";
   const $ = (id)=>document.getElementById(id);
   const esc = (s)=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -420,8 +421,17 @@
     const ctrl = new AbortController();
     const to = setTimeout(()=>ctrl.abort(), 185000);
     try{
-      const sep = url.indexOf("?")===-1 ? "?" : "&";
-      const res = await fetch(url + sep + "_=" + Date.now(), { method:"GET", cache:"no-store", signal:ctrl.signal });
+      const initiator = (currentUser && (currentUser.email || currentUser.name)) || "неизвестно";
+      const res = await fetch(url, {
+        method: "POST",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Webhook-Secret": WEBHOOK_SECRET
+        },
+        body: JSON.stringify({ source:"launcher", ts:Date.now(), initiator:initiator }),
+        signal: ctrl.signal
+      });
       clearTimeout(to);
       let data = null;
       try{ data = await res.json(); }catch(_){ }
